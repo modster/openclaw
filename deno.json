@@ -1,0 +1,14 @@
+{
+  "name": "openclaw",
+  "version": "0.1.0",
+  "tasks": {
+    "start": "DENO_TLS_CA_STORE=system deno run --allow-net --allow-env src/main.ts",
+    "dev": "DENO_TLS_CA_STORE=system deno run --allow-net --allow-env --watch src/main.ts",
+    "test": "DENO_TLS_CA_STORE=system deno test --allow-net --allow-env src/"
+  },
+  "imports": {
+    "hono": "npm:hono@^4",
+    "hono/cookie": "npm:hono@^4/cookie",
+    "hono/logger": "npm:hono@^4/logger"
+  }
+}
