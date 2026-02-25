@@ -4,7 +4,7 @@ export function homePage(): string {
   const body = /* html */ `
     <section style="text-align:center;padding:4rem 0 3rem;">
       <h1 style="font-size:2.5rem;font-weight:800;color:#2563eb;margin-bottom:1rem;">
-        Welcome to openclaw
+        Welcome to OpenClaw
       </h1>
       <p style="font-size:1.125rem;color:#475569;max-width:520px;margin:0 auto 2rem;">
         A secure, lightweight app powered by
