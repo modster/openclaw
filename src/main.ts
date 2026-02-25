@@ -1,16 +1,20 @@
+import { load } from "@std/dotenv";
 import { Hono } from "hono";
-import { logger } from "hono/logger";
-import { pagesRouter } from "./routes/pages.ts";
 import { authRouter } from "./routes/auth.ts";
+import { pagesRouter } from "./routes/pages.ts";
+import { logger } from "hono/logger";
+
+await load({
+  envPath: ".env", // Load from .env.local for development
+  export: true, // optional: export loaded variables for Deno.env, process.env, etc.
+});
+
+const { PORT } = Deno.env.toObject();
 
 const app = new Hono();
 
 app.use("*", logger());
-
 app.route("/auth", authRouter);
 app.route("/", pagesRouter);
 
-const port = Number(Deno.env.get("PORT") ?? 8000);
-console.log(`openclaw listening on http://localhost:${port}`);
-
-Deno.serve({ port }, app.fetch);
+Deno.serve({ port: PORT ? Number(PORT) : 8000 }, app.fetch);

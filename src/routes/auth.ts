@@ -1,17 +1,40 @@
+import { load } from "@std/dotenv";
 import { Hono } from "hono";
-import { getCookie, setCookie, deleteCookie } from "hono/cookie";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+
+await load({
+  envPath: ".env.local", // Load from .env.local for development
+  export: true, // optional: export loaded variables for Deno.env, process.env, etc.
+});
+
+// const {
+//   APP_BASE_URL,
+//   SESSION_SECRET,
+//   GOOGLE_CLIENT_ID,
+//   GOOGLE_CLIENT_SECRET,
+//   GOOGLE_AUTH_URL,
+//   GOOGLE_TOKEN_URL,
+//   GOOGLE_USERINFO_URL,
+// } = Deno.env.toObject();
+
+// const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+// const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+// const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+// const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") ?? ""; // Access env early to ensure it's set before handling requests.
+// const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET") ?? ""; // Access env early to ensure it's set before handling requests.
 
 export const authRouter = new Hono();
 
-const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+// function getRequiredEnv(name: string): string {
+//   const value = Deno.env.get(name);
+//   if (!value) throw new Error(`Missing required environment variable: ${name}`);
+//   return value;
+// }
 
-function getRequiredEnv(name: string): string {
-  const value = Deno.env.get(name);
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
-  return value;
-}
+// function getRedirectUri(): string {
+//   const base = APP_BASE_URL ?? "http://localhost:8000";
+//   return `${base}/auth/callback`;
+// }
 
 function getRedirectUri(): string {
   const base = Deno.env.get("APP_BASE_URL") ?? "http://localhost:8000";
@@ -33,13 +56,20 @@ async function signPayload(payload: string, secret: string): Promise<string> {
     false,
     ["sign"],
   );
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(payload),
+  );
   const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)));
   return `${payload}.${sigB64}`;
 }
 
 /** Verify a signed value produced by `signPayload`. Returns the payload on success, null on failure. */
-async function verifyPayload(signed: string, secret: string): Promise<string | null> {
+async function verifyPayload(
+  signed: string,
+  secret: string,
+): Promise<string | null> {
   const dotIdx = signed.lastIndexOf(".");
   if (dotIdx === -1) return null;
   const payload = signed.slice(0, dotIdx);
@@ -51,9 +81,13 @@ async function verifyPayload(signed: string, secret: string): Promise<string | n
 authRouter.get("/login", async (c) => {
   let clientId: string;
   try {
-    clientId = getRequiredEnv("GOOGLE_CLIENT_ID");
+    clientId = Deno.env.get("GOOGLE_CLIENT_ID") ?? "";
+    if (!clientId) throw new Error("Missing GOOGLE_CLIENT_ID");
   } catch {
-    return c.text("OAuth is not configured. Set GOOGLE_CLIENT_ID in your environment.", 503);
+    return c.text(
+      "OAuth is not configured. Set GOOGLE_CLIENT_ID in your environment.",
+      503,
+    );
   }
 
   const csrfState = crypto.randomUUID();
@@ -78,7 +112,7 @@ authRouter.get("/login", async (c) => {
     prompt: "select_account",
   });
 
-  return c.redirect(`${GOOGLE_AUTH_URL}?${params}`);
+  return c.redirect(`${Deno.env.get("GOOGLE_AUTH_URL") ?? ""}?${params}`);
 });
 
 /** Step 2 – Google redirects back here with an authorization code. */
@@ -96,16 +130,17 @@ authRouter.get("/callback", async (c) => {
   if (!signedCsrfState) {
     return c.text("Invalid OAuth state parameter.", 400);
   }
+
   const verifiedState = await verifyPayload(signedCsrfState, sessionSecret);
   if (!verifiedState || verifiedState !== csrfState) {
     return c.text("Invalid OAuth state parameter.", 400);
   }
 
-  const clientId = getRequiredEnv("GOOGLE_CLIENT_ID");
-  const clientSecret = getRequiredEnv("GOOGLE_CLIENT_SECRET");
+  const clientId = Deno.env.get("GOOGLE_CLIENT_ID") ?? "";
+  const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET") ?? "";
 
   // Exchange the authorization code for tokens.
-  const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+  const tokenRes = await fetch(Deno.env.get("GOOGLE_TOKEN_URL") ?? "", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -124,7 +159,7 @@ authRouter.get("/callback", async (c) => {
   const tokens = await tokenRes.json() as { access_token: string };
 
   // Fetch the authenticated user's profile.
-  const userRes = await fetch(GOOGLE_USERINFO_URL, {
+  const userRes = await fetch(Deno.env.get("GOOGLE_USERINFO_URL") ?? "", {
     headers: { Authorization: `Bearer ${tokens.access_token}` },
   });
 
@@ -132,10 +167,20 @@ authRouter.get("/callback", async (c) => {
     return c.text("Failed to fetch user info.", 500);
   }
 
-  const user = await userRes.json() as { name: string; email: string; picture: string };
+  const user = await userRes.json() as {
+    name: string;
+    email: string;
+    picture: string;
+  };
 
   // Build a signed session cookie so the payload cannot be tampered with.
-  const payload = btoa(JSON.stringify({ name: user.name, email: user.email, picture: user.picture }));
+  const payload = btoa(
+    JSON.stringify({
+      name: user.name,
+      email: user.email,
+      picture: user.picture,
+    }),
+  );
   const signedSession = await signPayload(payload, sessionSecret);
 
   setCookie(c, "session", signedSession, {
