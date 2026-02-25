@@ -45,18 +45,18 @@ export function layout(title: string, body: string): string {
 </head>
 <body>
   <header>
-    <a class="logo" href="/">openclaw</a>
+    <a class="logo" href="/">OpenClaw</a>
     <nav>
-      <a href="/terms">Terms</a>
-      <a href="/privacy">Privacy</a>
+      <a href="/terms-of-service">Terms Of Service</a>
+      <a href="/privacy-policy">Privacy Policy</a>
       <a href="/auth/login">Sign in with Google</a>
     </nav>
   </header>
   <main>${body}</main>
   <footer>
-    &copy; ${new Date().getFullYear()} openclaw &mdash;
-    <a href="/terms">Terms of Service</a> &middot;
-    <a href="/privacy">Privacy Policy</a>
+    &copy; ${new Date().getFullYear()} OpenClaw &mdash;
+    <a href="/terms-of-service">Terms of Service</a> &middot;
+    <a href="/privacy-policy">Privacy Policy</a>
   </footer>
 </body>
 </html>`;

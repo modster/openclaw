@@ -3,19 +3,9 @@ import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
 await load({
-  envPath: ".env.local", // Load from .env.local for development
+  envPath: ".env", // Load from .env.local for development
   export: true, // optional: export loaded variables for Deno.env, process.env, etc.
 });
-
-// const {
-//   APP_BASE_URL,
-//   SESSION_SECRET,
-//   GOOGLE_CLIENT_ID,
-//   GOOGLE_CLIENT_SECRET,
-//   GOOGLE_AUTH_URL,
-//   GOOGLE_TOKEN_URL,
-//   GOOGLE_USERINFO_URL,
-// } = Deno.env.toObject();
 
 // const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 // const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";

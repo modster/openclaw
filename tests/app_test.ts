@@ -1,7 +1,13 @@
+import { load } from "@std/dotenv";
 import { strict as assert } from "node:assert";
 import { Hono } from "hono";
-import { pagesRouter } from "./routes/pages.ts";
-import { authRouter } from "./routes/auth.ts";
+import { pagesRouter } from "../src/routes/pages.ts";
+import { authRouter } from "../src/routes/auth.ts";
+
+await load({
+  envPath: ".env",
+  export: true,
+});
 
 const app = new Hono();
 app.route("/auth", authRouter);

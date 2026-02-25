@@ -1,7 +1,7 @@
 import { layout } from "./layout.ts";
 
 export function privacyPage(): string {
-  const effectiveDate = "2025-01-01";
+  const effectiveDate = "2026-01-01";
   const body = /* html */ `
     <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.5rem;">Privacy Policy</h1>
     <p style="color:#64748b;margin-bottom:2rem;">Effective date: ${effectiveDate}</p>
@@ -80,7 +80,7 @@ export function privacyPage(): string {
 
       <h2 style="font-size:1.2rem;font-weight:700;margin:2rem 0 0.5rem;">9. Contact</h2>
       <p>
-        If you have questions about this Privacy Policy, please open an issue at
+        If you have questions about this Privacy Policy, please contact <a href="mailto:privacy@greeffer.com">privacy@greeffer.com</a> or open an issue at
         <a href="https://github.com/modster/openclaw">github.com/modster/openclaw</a>.
       </p>
     </section>
